@@ -131,7 +131,7 @@ PAGE = """<!doctype html><meta name=viewport content="width=device-width,initial
 table{width:100%;border-collapse:collapse;margin:8px 0}td{padding:3px 4px;border-bottom:1px solid #eee;font-size:14px}td:first-child{color:#666;width:42%}
 .m{color:#b00020;font-weight:600}textarea{width:100%;height:170px;box-sizing:border-box;font:14px system-ui;padding:8px}
 button{padding:10px 18px;border:0;border-radius:8px;font-size:15px;margin-right:8px}.s{background:#12355b;color:#fff}.k{background:#ddd}</style>
-<h1>Mail Desk &mdash; %d to review</h1>%s"""
+<h1>Mail Desk &mdash; {N} to review</h1>{C}"""
 
 @app.route("/")
 def home():
@@ -149,7 +149,7 @@ def home():
     n = cards.count("class=c>")
     k = db().execute("select count(*) from sent").fetchone()[0]
     foot = f"<p style='padding:0 16px;color:#666'>Learned from {k} sent mails &middot; <a href=/relearn>relearn my style</a></p>"
-    return PAGE % (n, (cards or "<p style='padding:16px'>Nothing waiting.</p>") + foot)
+    return PAGE.replace("{N}", str(n)).replace("{C}", (cards or "<p style='padding:16px'>Nothing waiting.</p>") + foot)
 
 @app.route("/relearn")
 def relearn():
