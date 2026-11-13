@@ -34,7 +34,8 @@ def init():
 def token():
     if time.time() < _tok["exp"]: return _tok["v"]
     r = requests.post(f"{ACC}/oauth/v2/token", params={"refresh_token": E("ZOHO_REFRESH_TOKEN"), "client_id": E("ZOHO_CLIENT_ID"),
-        "client_secret": E("ZOHO_CLIENT_SECRET"), "grant_type": "refresh_token"}, timeout=30).json()
+        "client_secret": E("ZOHO_CLIENT_SECRET"), "grant_type": "refresh_token"}, timeout=20).json()
+    if "access_token" not in r: raise RuntimeError("Zoho token error: " + json.dumps(r))
     _tok.update(v=r["access_token"], exp=time.time() + 3000); return _tok["v"]
 
 def zoho(method, path, **kw):
@@ -184,8 +185,11 @@ def zoho_connect():
     code = request.args.get("code", "").strip()
     if not code:
         return head + "<h3>Connect Zoho</h3><form><input name=code placeholder='paste code here' style='width:100%;padding:10px;box-sizing:border-box'><p><button style='padding:10px 18px'>Get refresh token</button></p></form>"
-    r = requests.post(f"{ACC}/oauth/v2/token", data={"grant_type": "authorization_code", "client_id": E("ZOHO_CLIENT_ID"),
-        "client_secret": E("ZOHO_CLIENT_SECRET"), "code": code}, timeout=30).json()
+    try:
+        r = requests.post(f"{ACC}/oauth/v2/token", data={"grant_type": "authorization_code", "client_id": E("ZOHO_CLIENT_ID"),
+            "client_secret": E("ZOHO_CLIENT_SECRET"), "code": code}, timeout=20).json()
+    except Exception as e:
+        return head + "<h3>Error</h3><pre>" + html.escape(repr(e)) + "</pre>"
     if "refresh_token" in r:
         return head + "<h3>Copy this into Render as ZOHO_REFRESH_TOKEN</h3><textarea style='width:100%;height:110px'>" + html.escape(r["refresh_token"]) + "</textarea>"
     return head + "<h3>Failed</h3><pre>" + html.escape(json.dumps({k: v for k, v in r.items() if k != "access_token"})) + "</pre><p>The code lasts 10 minutes and works once. Make a new one and try again.</p>"
